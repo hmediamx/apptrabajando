@@ -1,0 +1,26 @@
+<div *ngIf="_authService.gioUsuario == null; else chatContacts">
+	Necesitas iniciar sesión
+</div>
+
+<ng-template #chatContacts>
+	<div class="p-3">
+		<button mat-raised-button (click)="close()">
+			Cancelar
+		</button>
+	</div>
+	<mat-nav-list>
+		<mat-divider></mat-divider>
+		<mat-list-item *ngFor="let item of chats | keyvalue" (click)="openChat(item)">
+			
+	
+			<img matListAvatar src="{{item.value.photoURL}}" alt="">
+	
+			<h3 mat-line>{{item.value.displayName}}</h3>
+			<p mat-line>{{item.value.channelMessage}}</p>
+	
+			<mat-icon>keyboard_arrow_right</mat-icon>
+	
+			<mat-divider></mat-divider>
+		</mat-list-item>
+	</mat-nav-list>
+</ng-template>

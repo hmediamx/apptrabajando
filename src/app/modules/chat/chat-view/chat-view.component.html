@@ -1,0 +1,70 @@
+<!-- <div class="h-100 animated fadeIn fondo-chat"> -->
+<div class="container-fluid d-flex flex-column chat-container"
+    [ngStyle]="{ 'background-color': 'rgba(' + chat.recipient.colorRgba + ', 0.3)', 'background-image': 'url(' + chat.recipient.imagenFondo + ')' }">
+
+    <div #contenedor class="container-fluid flex-fill mt-md-2" style="overflow-y: scroll; padding-top: 64px;">
+
+        <div class="row" *ngFor="let item of chatHistorial | keyvalue">
+
+
+            <div class="col-12 pl-2 pr-2 pl-md-3 pr-md-3 pt-1 pb-1">
+                <div
+                    [className]="chat.sender.uid == item.value.sender.uid ? 'mensaje mensaje-remitente' : 'mensaje mensaje-destinatario'">
+
+                    <mat-menu #menu="matMenu">
+                        <button mat-menu-item (click)="deleteMessage(item.value)">
+                            <mat-icon>delete</mat-icon>
+                            <span>Eliminar mensaje</span>
+                        </button>
+                    </mat-menu>
+
+                    <div style="font-size: 14px;" class="pr-3 pl-3 pt-1 pb-1">
+                        <mat-icon class="bubble-menu" (click)="menuBubble($event, item.value)"
+                            [matMenuTriggerFor]="menu">keyboard_arrow_down</mat-icon>
+                        {{ item.value.message }}
+                    </div>
+
+                    <div *ngIf="item.value.archivo">
+                        <img src="{{ item.value.archivo.url }}" alt="" width="100%">
+                    </div>
+
+                    <div class="fecha" style="opacity: 0.5">{{ item.value.date | date:'medium' }}</div>
+                </div>
+            </div>
+
+        </div>
+
+
+        <div class="row" *ngIf="loading">
+            <div class="col-12 pl-3 pr-3 pt-1 pb-1">
+                <div class="mensaje mensaje-remitente p-3">
+                    <mat-progress-spinner class="example-margin" color="primary" mode="determinate"
+                        [value]="porcentajeProgreso">
+                    </mat-progress-spinner>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+
+    <div class="d-flex bg-light">
+        <div class="flex-fill p-1">
+            <textarea cdkTextareaAutosize #autosize="cdkTextareaAutosize" cdkAutosizeMinRows="2" cdkAutosizeMaxRows="5"
+                style="border-radius: 5px; width: 100%; height: 50px;" #message></textarea>
+        </div>
+        <div class="p-1">
+            <input hidden type="file" (change)="enviarMensajeConArchivo($event)" #archivoInput />
+            <button mat-mini-fab (click)="archivoInput.click()">
+                <mat-icon matSuffix>attach_file</mat-icon>
+            </button>
+        </div>
+
+        <div class="p-1">
+            <button mat-mini-fab (click)="enviarMensaje(message.value); message.value = ''">
+                <mat-icon>send</mat-icon>
+            </button>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,26 @@
+<div class="files-list-box" *ngIf="archivosLista.length > 0">
+    <div *ngFor="let archivo of archivosLista">
+        <mat-list *ngIf="archivo.datos">
+            <mat-list-item>
+                <mat-icon mat-list-icon color="primary" *ngIf='archivo.tipo=="image/jpeg" || archivo.tipo=="image/gif" || archivo.tipo=="image/png"'>
+                    insert_photo
+                </mat-icon>
+
+                <div mat-line>
+                    <a href="{{ archivo.url }}" target="_blank"><b>{{ archivo.nombre }}</b> ({{ archivo.size }})Kb </a>
+                </div>
+            </mat-list-item>
+        </mat-list>
+
+        <mat-progress-bar mode="determinate" color="accent" value="{{ archivo.progreso }}" *ngIf="archivo.barraProgreso"
+            class="progress-bar"></mat-progress-bar>
+    </div>
+</div>
+
+<div>
+    <input hidden type="file" (change)="adjuntarArchivo($event)" #archivoInput>
+    <button mat-raised-button type="button" color="primary" (click)="archivoInput.click()" class="d-block w-100">
+        <mat-icon matSuffix>attach_file</mat-icon>
+        {{ buttonText }}
+    </button>
+</div>

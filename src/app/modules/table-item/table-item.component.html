@@ -1,0 +1,54 @@
+<div class="container" style="margin-top: 56px;">
+    <div class="row">
+        <div class="col-12 p-5">
+            <div class="card">
+                <div class="card-header">
+                    Mostrando elemento
+                </div>
+
+                <div class="card-body">
+
+                    <div class="row">
+                        <div class="col-12 p-3">
+                            <div *ngFor="let element of item | keyvalue">
+
+                                <div *ngIf="element.key != 'archivosArray' && element.key != 'coordenadas'">
+                                    <b>{{ element.key }}</b> : {{ element.value }} <br>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+
+
+                    <div class="row">
+                        <div *ngFor="let element of item | keyvalue">
+                            <div *ngIf="element.key == 'archivosArray'">
+
+                                <div class="col-12 p-3" *ngFor="let item of element.value">
+                                    <img src="{{ item.url }}" alt="" class="w-100 img-thumbnail shadow">
+                                </div>
+                                
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div class="row">
+                        <div *ngFor="let element of item | keyvalue">
+                            <div *ngIf="element.key == 'coordenadas'">
+
+                                <div class="col-12">
+                                    <a class="btn btn-success" href="https://www.google.com/maps/search/?api=1&query={{element.value.lat}},{{element.value.lng}}" target="_blank">Abrir ubicación</a>
+                                </div>
+                                
+                            </div>
+                        </div>
+                    </div>                    
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

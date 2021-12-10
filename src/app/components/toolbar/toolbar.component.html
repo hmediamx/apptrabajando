@@ -1,0 +1,134 @@
+<mat-toolbar color="primary" [class.mat-elevation-z6]="true" class="d-block header-toolbar">
+    <mat-toolbar-row class="pl-2 pr-2 d-flex">
+
+        <!-- *****************************************************************  -->
+        <!-- *****************      BOTÓN IZQUIERDO      ***********  -->
+        <div>
+            <div *ngIf="page == 'home'; else volver">
+                <button mat-icon-button (click)="_sidenavServiceService.open()">
+                    <mat-icon class="text-light">menu</mat-icon>
+                </button>
+            </div>
+    
+            <ng-template #volver>
+                <button mat-icon-button (click)="_location.back()">
+                    <mat-icon class="text-light">arrow_back</mat-icon>
+                </button>
+            </ng-template>
+        </div>
+
+        <!-- *****************************************************************  -->
+        <!-- *****************      ENCABEZADO     ************  -->
+        <!-- *******    ******************************************************  -->
+        <div class="text-center font-weight-normal flex-fill">
+            
+            <div *ngIf="dataToolbar?.title; else nochatview">
+                <div class="text-left">
+
+                    <div *ngIf="dataToolbar.image">
+                        <img src="{{dataToolbar.image}}" alt="" class="toolbar-image">
+                    </div>
+
+                    <b class="text-light"
+                        style="font-size: 14px;">{{ (dataToolbar?.title.length>26)? (dataToolbar?.title | slice:0:26)+'..':(dataToolbar?.title) }}</b>
+                </div>
+            </div>
+            <ng-template #nochatview>
+                {{ titulo }}
+            </ng-template>
+
+            <!-- <div>
+                {{ titulo }}
+            </div> -->
+        </div>
+
+
+
+        <!-- *****************************************************************  -->
+        <!-- *****************      MENU DERECHO      ************************  -->
+        <!-- *******    **********************************************************  -->
+        <div>
+            <div *ngIf="dataToolbar.tipo == 'chat'; else menuUsuario">
+
+                <button mat-button [matMenuTriggerFor]="userMenu" class="text-light">
+                    <mat-icon class="s-16">folder_shared</mat-icon>
+                </button>
+    
+                <mat-menu #userMenu="matMenu" [overlapTrigger]="false" xPosition="before">
+                    <!--
+                        <button mat-menu-item>
+                        <mat-icon>account_circle</mat-icon>
+                        <span>My Profile</span>
+                        </button>
+    
+                    -->
+                    <button mat-menu-item (click)="sendRecycleBin()">
+                        <mat-icon>delete</mat-icon>
+                        <span>Eliminar este chat</span>
+                    </button>
+    
+                    <!-- <button mat-menu-item (click)="_authService.cerrarSesion()">
+                            <mat-icon>exit_to_app</mat-icon>
+                            <span>Cerrar sesión</span>
+                        </button> -->
+                </mat-menu>
+            </div>
+    
+    
+    
+            <ng-template #menuUsuario>
+                <!-- <span *ngIf="gioDos; else login">{{gioDos.displayName | json}}</span> -->
+                <!-- <button *ngIf="gioUsuario | async as usuario; else login" mat-button -->
+                <button *ngIf="gioUsuario as algo; else login" mat-button [matMenuTriggerFor]="userMenu"
+                    class="text-light">
+    
+                    <mat-icon *ngIf="!algo.photoURL">account_circle</mat-icon>
+    
+                    <img *ngIf="algo.photoURL" class="avatar mr-0 mr-sm-16 mr-1 rounded-circle" src="{{ algo.photoURL }}"
+                        style="height: 28px;">
+    
+                    <span *ngIf="algo.isAnonymous; else usuarioRegistrado">
+                        <span class="d-none d-md-inline-block ml-1">Anónimo</span>
+                    </span>
+    
+                    <ng-template #usuarioRegistrado>
+                        <span class="d-none d-md-inline-block ml-1">{{ algo.displayName }}</span>
+                    </ng-template>
+    
+                    <mat-icon class="s-16">keyboard_arrow_down</mat-icon>
+                </button>
+    
+                <mat-menu #userMenu="matMenu" [overlapTrigger]="false" xPosition="before">
+                    <button mat-menu-item routerLink="usuario-perfil">
+                        <mat-icon>account_circle</mat-icon>
+                        <span>Mi perfil</span>
+                    </button>
+    
+                    <!--
+    
+                                        <button mat-menu-item class="">
+                                        <mat-icon>mail</mat-icon>
+                                        <span>Inbox</span>
+                                        </button>
+                                        -->
+    
+                    <button mat-menu-item (click)="_authService.closeSesion()">
+                        <mat-icon>exit_to_app</mat-icon>
+                        <span>Cerrar sesión</span>
+                    </button>
+                </mat-menu>
+    
+                <ng-template #login>
+                    <button routerLink="/sesion-iniciar" mat-button class="text-light">
+                        <mat-icon>login </mat-icon> <span class="d-none d-md-inline-block ml-1"> Iniciar
+                            sesión</span>
+                    </button>
+                </ng-template>
+            </ng-template>
+        </div>
+
+
+
+
+    </mat-toolbar-row>
+</mat-toolbar>
