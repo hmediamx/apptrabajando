@@ -98,8 +98,16 @@ export class FormComponent {
         this.parametros.paramMap.subscribe(data => {
             
             let form = data['params']['form'];
+
             // Get data json and assign to myDinamicForm
-            this.myDinamicForm = forms[form];
+            this.myDinamicForm = this.getFormData(form);
+            
+
+
+            console.log("El formulario en cuestión es: ", this.myDinamicForm);
+            
+            
+            
             // Create formGroup with formData
             this.formInit(form);
             // Get data for dynamics Selects
@@ -114,6 +122,13 @@ export class FormComponent {
         })
     }
 
+
+    // ===============================================================================
+    // 			GET FORM DATA
+    // ===============================================================================
+    getFormData(formId) {
+        return forms[formId];
+    }
 
     openSnackBar(message: string, action: string) {
 		this._snackBar.open(message, action, {
