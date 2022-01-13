@@ -44,6 +44,7 @@ import { UploaderModule } from "./../uploader/uploader.module";
 
 // Service API
 import { NoderestapiService } from "./../../../app/services/noderestapi.service";
+import { HttpClientModule } from "@angular/common/http";
 
 
 // QR
@@ -63,7 +64,8 @@ const routes: Routes = [
   entryComponents: [DialogAlert], 
   imports: [
     AnQrcodeModule, 
-    CommonModule,
+    CommonModule, 
+    HttpClientModule, 
   // ArchivosModule,
   LocationModule, 
   UploaderModule, 

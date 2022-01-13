@@ -1,5 +1,5 @@
 // 1602 9361
-import { Component, ViewChild, Inject } from '@angular/core';
+import { Component, ViewChild, NgZone, Inject } from '@angular/core';
 import { Router, ActivatedRoute } from "@angular/router";
 import { FormBuilder, Validators, FormGroup, FormControl } from '@angular/forms';
 import { MatDialog, MatDialogConfig, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -17,15 +17,16 @@ import { gioUser } from "../../models/user.model";
 // Emitter
 import { ToolbarService } from "./../../services/comunication/toolbar.service";
 // DATA
-import { forms } from "../../../assets/data/forms";
 declare var require: any
 // PDF
 var pdfMake = require('pdfmake/build/pdfmake.js');
 var pdfFonts = require('pdfmake/build/vfs_fonts.js');
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
+//HTTP
+import { HttpClient } from "@angular/common/http";
 
-
+import { environment } from "./../../../environments/environment";
 
 
 @Component({
@@ -64,16 +65,15 @@ export class FormComponent {
         private api: NoderestapiService,
         public _router: Router,
         public _toolbar: ToolbarService, 
-        private _snackBar: MatSnackBar
+        private _snackBar: MatSnackBar, 
+        private _httpClient:HttpClient, 
+        private zone:NgZone
     ) {
+
         this.dynamicSelectsArray = {}
-
-        this.pageInit()
-
         this._toolbar.dataToolbar.emit(this._router.url)
-
         this.paginaActual.setPaginaActual();
-
+        this.dataImprimir = false;
 
         this.autorizacion._auth.onAuthStateChanged(data => {
             if (data) {
@@ -82,52 +82,41 @@ export class FormComponent {
             }
         })
 
-
-        this.dataImprimir = false
+        this.parametros.paramMap.subscribe(dataParams => {
+            let formularioId = dataParams['params']['form'];
+            let url = environment.urlForms+formularioId+".json";
+            this.cargarDatosRemotosDelFormulario(url);
+        });
     }
 
 
-
-
-    // ===============================================================================
-    // 			PAGE INIT
-    // ===============================================================================
-    pageInit() {
-        this.editing = false
-        // We obtain params data to build the page with this params
-        this.parametros.paramMap.subscribe(data => {
-            
-            let form = data['params']['form'];
-
-            // Get data json and assign to myDinamicForm
-            this.myDinamicForm = this.getFormData(form);
-            
-
-
-            console.log("El formulario en cuestión es: ", this.myDinamicForm);
-            
-            
-            
-            // Create formGroup with formData
-            this.formInit(form);
-            // Get data for dynamics Selects
-            this.createDynamicSelects(this.myDinamicForm['fields']);
-            // Get Data if editing:boolean is available
-            if(data['params']['id']) { 
-                this.editing = true
-                this.editId = data['params']['id'];
-                this.loadFieldsData(form, data['params']['id']);
-                this.formGroup.value.id = data['params']['id'];
-            }
-        })
+    cargarDatosRemotosDelFormulario(url){
+        this._httpClient.get(url).subscribe(data=>{
+            this.myDinamicForm = data;
+            this.armarFormulario(this.myDinamicForm);
+        });            
     }
 
+    armarFormulario(myDinamicForm){
+        this.myDinamicForm = myDinamicForm;
+        // this.pageInit(myDinamicFormParams['params']['form'], myDinamicForm);
+        console.log("this.parametros");
+
+        this.editing = false;
+        this.formInit(myDinamicForm);
+        this.createDynamicSelects( myDinamicForm['fields'] );
+    };
+
+
 
     // ===============================================================================
-    // 			GET FORM DATA
+    // 			FORM IS EDITING
     // ===============================================================================
-    getFormData(formId) {
-        return forms[formId];
+    isEditing(Id, formId){
+        this.editing = true;
+        this.editId = Id;
+        this.loadFieldsData(formId, Id);
+        this.formGroup.value.id = Id;
     }
 
     openSnackBar(message: string, action: string) {
@@ -141,31 +130,24 @@ export class FormComponent {
     // ===============================================================================
     createDynamicSelects(data) {
         // dynamicSelectsArray
-        console.log("Recibe createDynamiSelects", data)
 
 
         for (let i = 0; i < data.length; i++) {
 
             if (data[i]['blockType'] == 'dynamicSelect') {
-                console.log("Encontré algo en: ", data[i])
 
                 if(this.myDinamicForm['processType'] == "api") {
                     this.api.traerGenericos(data[i]['routeData']).subscribe(response => {
-                        console.log("La respuesta dinámica", response['data'])
                         let itemVariable = data[i]['dataVariable']
-                        console.log("itemVariable", itemVariable)
                         this.dynamicSelectsArray[data[i]['dataVariable']] = response['data']
     
-                        console.log("Otra vez revisando que yhay en dynamicSelectsArray", this.dynamicSelectsArray)
                     })
                 } 
 
                 if(this.myDinamicForm['processType'] == "firebaseRealTime") {
                     
                     this.datos._angularFireDatabase.database.ref(data[i]['routeData']).on('value', snapshot =>{
-                        console.log("La respuesta dinámica", snapshot.val())
                         let itemVariable = data[i]['dataVariable']
-                        console.log("itemVariable", itemVariable)
                         this.dynamicSelectsArray[data[i]['dataVariable']] = snapshot.val()
                     })
 
@@ -184,7 +166,6 @@ export class FormComponent {
 
         if(loadData) {
             this.api.getGeneric(loadAditionaldataPath, event).subscribe(data => {
-                console.log("Data traido por cambio de select", data)
     
                 this.formGroup.patchValue( data['data'][0] )
             })
@@ -199,29 +180,28 @@ export class FormComponent {
     fillCheckbox(event){
         this.formGroup.value[event.source.name] = event.checked;
 
-        console.log(event.checked)
         // let item:any = [];
         // item[event['source']['name']] = event.checked;
         
         // if(event.checked){
             
-        //     console.log(event.source.name)
+    
         // } 
-        console.log(this.formGroup.value)
     }
 
 
     // =============================================================
     //      INIT FORM WITH JSON DATA
     // =============================================================
-    formInit(formulario) {
+    formInit(formularioObject) {
         let grupo = {}
 
+        console.log("EL FORMULARIOObject", formularioObject);
+
         // we get json form and construct for each object in the array
-        forms[formulario].fields.forEach(campo => {
+        formularioObject.fields.forEach(campo => {
 
-
-            console.log("Editing se ve así en la constrcución", this.editing)
+            console.log("EVENTO");
             
             if (campo.formularioElement) {
                 
@@ -233,17 +213,17 @@ export class FormComponent {
 
             }
 
-        })
+        });
 
-        this.formGroup = this._formBuilder.group(grupo)
+        console.log("GRUPO", grupo);
+
+        this.formGroup = this._formBuilder.group(grupo);
     }
 
 
     loadFieldsData(table, id){
         this.api.getGeneric(table, id).subscribe(data=>{
-            console.log("Data obteined", data)
             this.formGroup.patchValue(data['data'][0])
-            console.log("this.formGroup", this.formGroup.value)
         })
     }
 
@@ -253,14 +233,11 @@ export class FormComponent {
     //      PROCESAR FORMULARIO
     // =============================================================
     processForm() {
-        console.log("Processing form with", this.myDinamicForm.processType)
 
         if (this.formGroup.valid && this.myDinamicForm.processType == 'firebaseRealTime') {
-            console.log("1")
             this.processFormWithFirebase()
         } else if (this.formGroup.valid && this.myDinamicForm.processType == 'api') {
             this.processFormWithApi()
-            console.log("2")
         }
 
     }
@@ -269,7 +246,6 @@ export class FormComponent {
     //      PROCESS WITH FIREBASE
     // =============================================================
     processFormWithFirebase() {
-        console.log("Los values aquí  son: ", this.formGroup.value)
         
         let pushId = this.datos._angularFireDatabase.createPushId()
         
@@ -320,10 +296,8 @@ export class FormComponent {
             
             this.formGroup.value.id = this.editId
 
-            console.log("Vamos a enviar ", this.formGroup.value)
             
             this.api.updateGeneric(this.myDinamicForm.route, this.formGroup.value).subscribe(data => {
-                console.log("Actualizar estado", data)
                 
                 this.openSnackBar("Se actualizó tu registro correctamente.", "Ok")
 
@@ -333,10 +307,8 @@ export class FormComponent {
                 
             })
         } else {
-            console.log("Vamos a enviar ", this.formGroup.value)
 
             this.api.guardarGenerico(this.myDinamicForm.route, this.formGroup.value).subscribe(data => {
-                console.log("Resultado del envío", data)
                 
                 if(data['code'] == 200) {
                     this.formGroup.reset()
@@ -399,7 +371,6 @@ export class FormComponent {
     // =============================================================
     leerArchivos(event) {
         this.archivosLista = event
-        console.log("Leyendo desde FORM:", this.archivosLista)
     }
 
 
@@ -410,7 +381,6 @@ export class FormComponent {
     retornarRuta(event, control) {
         this.formGroup.value[control] = event
 
-        console.log("Que hay ", this.formGroup.value)
     }
 
 
@@ -467,10 +437,8 @@ export class FormComponent {
     //      GUARDAR EN LA BASE DE DATOS
     // =============================================================
     sendToFirebase(updates) {
-        console.log("Sending to firebase ... ", updates)
 
         this.datos._angularFireDatabase.database.ref().update(updates).then(() => {
-            console.log("El envío a firebase ha sido exitoso.")
             this.datosRespaldo = this.formGroup.value
             this.afterSend()
         })
@@ -541,7 +509,6 @@ export class FormComponent {
 
 
     generatePdf() {
-        console.log("Creando PDF ...");
         const documentDefinition = {
             pageSize: {
                 width: 216,

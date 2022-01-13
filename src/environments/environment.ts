@@ -20,7 +20,8 @@ export const environment = {
 		usoDeLibreria: false
 	},
 	url: "google.com.mx", 
-	api: 'http://localhost:5000/ecatepecapp/us-central1/app'
+	api: 'http://localhost:5000/ecatepecapp/us-central1/app', 
+	urlForms: "https://gobiernoio.firebaseio.com/forms/"
 };
 
 /*
